@@ -247,7 +247,6 @@ class MyAPI extends API
                         case 'gid':
                                 $fullfilter = build_filter($this->args, array('uid'=>'uid', 'gid'=>'gid'));
                                 $sqlfilter=$fullfilter[0];
-
                                 $columns[] = array('title' => $content_requested);
                                 $columns[] = array('title' => 'Size');
                                 $columns[] = array('title' => 'File Count');
@@ -256,8 +255,10 @@ class MyAPI extends API
                                 $req = $db->prepare("SELECT $content_requested, SUM(size) AS ssize, SUM(count) AS scount FROM ACCT_STAT $sqlfilter GROUP BY $content_requested;");
                                 $req->execute($fullfilter[1]);
                                 while($sqldata = $req->fetch(PDO::FETCH_ASSOC)) {
-                                        $datasets[] = array( $sqldata[$content_requested],$sqldata['ssize'],$sqldata['scount'],string_color($sqldata[$content_requested]));
+                                      $labels[] = $sqldata[$content_requested];
+                                      $datasets[] = array( $sqldata[$content_requested],$sqldata['ssize'],$sqldata['scount'],string_color($sqldata[$content_requested]));
                                 }
+                                $data['metadata']=array('default_graph' => 'doughnut', 'content'=>'uidgid');
                                 break;
 
                         case 'Sizes':
@@ -268,6 +269,7 @@ class MyAPI extends API
                                 $ssize = array("sz0","sz1","sz32","sz1K","sz32K","sz1M","sz32M","sz1G","sz32G","sz1T");
                                 $select_str = "SUM(sz0) AS ssz0";
                                 foreach ($ssize as $ssz) {
+                                        $labels[] = l($ssz);
                                         $select_str = $select_str.", SUM($ssz) AS s$ssz";
                                         $columns[] = array('title' => l($ssz));
                                 }
@@ -281,15 +283,17 @@ class MyAPI extends API
                                         }
                                         $datasets[] = $list;
                                 }
+                                $data['metadata']=array('default_graph' => 'bar', 'content'=>'sizes');
                                 break;
 
                         case 'Files':
                                 global $MAX_ROWS;
                                 $fullfilter = build_filter($this->args, array('filename'=>'name', 'uid'=>'uid', 'gid'=>'gid'));
                                 $sqlfilter=$fullfilter[0];
-                                $req = $db->prepare("SELECT uid, gid, size, blocks, name, type, from_unixtime(creation_time) AS creation_time".
+                                $q="SELECT uid, gid, size, blocks, name, type, from_unixtime(creation_time) AS creation_time".
                                                     ", from_unixtime(last_access) AS last_access, from_unixtime(last_mod) AS last_mod".
-                                                    " FROM NAMES INNER JOIN ENTRIES ON ENTRIES.id = NAMES.id $sqlfilter LIMIT $MAX_ROWS");
+                                                    " FROM NAMES INNER JOIN ENTRIES ON ENTRIES.id = NAMES.id $sqlfilter LIMIT $MAX_ROWS";
+                                $req = $db->prepare($q);
                                 $req->execute($fullfilter[1]);
 
                                 //we should autorize the user to see his own files
@@ -304,9 +308,9 @@ class MyAPI extends API
                                 $columns[] = array('title' => 'last_mod');
                                 $columnsDefs[] = array('type' => 'file-size', 'targets' => 3);
                                 while($sqldata = $req->fetch(PDO::FETCH_ASSOC)) {
-
                                         $datasets[] = array_values($sqldata);
                                 }
+                                $data['metadata']=array('default_graph' => 'bubble', 'content'=>'files');
                                 break;
 
 
@@ -326,6 +330,7 @@ class MyAPI extends API
                                                 $datasets[] = array( ($sqldata['sstatus'] == '') ? 'None': $sqldata['sstatus'],$sqldata['ssize'],$sqldata['scount']);
                                         }
                                 }
+                                $data['metadata']=array('default_graph' => 'bar', 'content'=>'default');
                                 break;
                         }
                         $data['columns'] = $columns;

@@ -238,8 +238,7 @@ function GetGraph(item){
                            columns: data.columns,
                            columnDefs: data.columnsDefs
                 } );
-
-                reinitGraph();
+                reinitGraph(data.metadata);
 
 
         });
@@ -247,20 +246,41 @@ function GetGraph(item){
 
 }
 
-function reinitGraph()
+function reinitGraph(metadata)
 {
   //Data for Graph
   var fileLabels=new Array();
   var fileSize=new Array();
   var fileCount=new Array();
   var bkColor=new Array();
-  TableState.rows({page:'current'}).data().each( function ( d ) {
-      fileLabels.push(d[0]);
-      fileSize.push(d[1]);
-      fileCount.push(d[2]);
-      bkColor.push(d[3]);
+  if(metadata.content=='uidgid'){
+  }
+  else if (metadata.content=='sizes'){
+    TableState.columns().header().each( function ( d ) {
+      if($(d).html()!='Owner')
+        fileLabels.push($(d).html());
+    });
+  }
 
-  } );
+  TableState.rows({page:'current'}).data().each( function ( d ) {
+    if(metadata.content=='uidgid'){
+      fileLabels.push(d[0]);
+      fileSize.push(parseInt(d[1]));
+      fileCount.push(parseInt(d[2]));
+      bkColor.push(d[d.length-1]);
+    }
+    else if (metadata.content=='sizes') {
+      $.each(fileLabels, function(i, l){
+        if(i>0){
+          if (typeof fileSize[i-1] !== 'undefined')
+            fileSize[i-1]+=parseInt(d[i]);
+          else {
+            fileSize[i-1]=parseInt(d[i]);
+          }
+        }
+      });
+    }
+  });
 
   var chartData = {
     labels: fileLabels,
@@ -280,6 +300,19 @@ function reinitGraph()
     ]
   }
 
+  if (metadata.content=='sizes'){
+    chartData = {
+      labels: fileLabels,
+      datasets: [
+        {
+          data: fileSize,
+          backgroundColor: '#DDDDFF',
+          label: "Number of files",
+          unit: "count"
+        }
+      ]
+    }
+  }
   var options = {
         responsive : true,
         animation : false,
@@ -302,12 +335,12 @@ function reinitGraph()
 
   //Create the new graph
   myChart = new Chart(GraphCTX,{
-          type: 'doughnut',
+          type: metadata.default_graph,
           data: chartData,
           options: options
   });
 
-  GraphState='doughnut';
+  GraphState=metadata.default_graph;
 
 }
 
