@@ -241,6 +241,7 @@ class MyAPI extends API
                         $columns = array();
                         $columnsDefs = array();
                         $datasets = array();
+                        $color = array();
                         switch ($content_requested) {
                         case 'uid':
                         case 'gid':
@@ -250,11 +251,12 @@ class MyAPI extends API
                                 $columns[] = array('title' => $content_requested);
                                 $columns[] = array('title' => 'Size');
                                 $columns[] = array('title' => 'File Count');
+                                $columns[] = array('title' => 'Colour');
                                 $columnsDefs[] = array('type' => 'file-size', 'targets' => 1);
                                 $req = $db->prepare("SELECT $content_requested, SUM(size) AS ssize, SUM(count) AS scount FROM ACCT_STAT $sqlfilter GROUP BY $content_requested;");
                                 $req->execute($fullfilter[1]);
                                 while($sqldata = $req->fetch(PDO::FETCH_ASSOC)) {
-                                        $datasets[] = array( $sqldata[$content_requested],formatSizeNumber($sqldata['ssize']),$sqldata['scount']);
+                                        $datasets[] = array( $sqldata[$content_requested],$sqldata['ssize'],$sqldata['scount'],string_color($sqldata[$content_requested]));
                                 }
                                 break;
 
@@ -321,7 +323,7 @@ class MyAPI extends API
                                         $req->execute($fullfilter[1]);
 
                                         while($sqldata = $req->fetch()) {
-                                                $datasets[] = array( ($sqldata['sstatus'] == '') ? 'None': $sqldata['sstatus'],formatSizeNumber($sqldata['ssize']),$sqldata['scount']);
+                                                $datasets[] = array( ($sqldata['sstatus'] == '') ? 'None': $sqldata['sstatus'],$sqldata['ssize'],$sqldata['scount']);
                                         }
                                 }
                                 break;
