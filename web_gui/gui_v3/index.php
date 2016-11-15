@@ -113,7 +113,7 @@ echo '<li><a href="#"  onclick="GetGraph(\'Files\')">Files</a></li>';
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
        <div id="messagebox"></div>
-        <canvas id="ctx"></canvas>
+        <canvas id="ctx" height="300"></canvas>
         <table id="datalist" class="table table-striped table-bordered" width="100%"></table>
 
       </div>

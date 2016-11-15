@@ -17,6 +17,8 @@ var TableState="empty";
 var myChart;
 var GraphCTX;
 var lastGet="empty";
+var metadata;
+var data;
 //Global Graph
 //Chart.defaults.global.responsive = true;
 Chart.defaults.global.title.display = true;
@@ -137,7 +139,6 @@ $(function() {
  **************************************/
 //GetGraph and Table Data async
 function GetGraph(item){
-
         lastGet=item;
         $('#messagebox').html("");
         //Get filter
@@ -150,71 +151,6 @@ function GetGraph(item){
                 }
         }
 
-
-        //Get the Graph data
-        $.ajax({
-                url: "api/index.php?request=graph/" + item + "/" + queryString
-        }).then(function(data) {
-          //console.log(data);
-        });
-        //         var options = {
-        //                 responsive : true,
-        //         animation : false,
-        //         showAllTooltips: false,
-        //         defaultFontSize: 14,
-        //         tooltips: {
-        //                 enabled: true,
-        //                 mode: 'single',
-        //                 callbacks: {
-        //                         title: function(tooltipItems, data) {
-        //                           val = data.labels[tooltipItems[0].index]
-        //                           type = data.datasets[tooltipItems[0].datasetIndex].unit
-        //                           if (type=="size" || type=="count") {
-        //                                   return val
-        //                           }
-        //                           return ""
-        //                         },
-        //                         label: function(tooltipItems, data) {
-        //                                 val = data.datasets[tooltipItems.datasetIndex].data[tooltipItems.index]
-        //                                         type = data.datasets[tooltipItems.datasetIndex].unit
-        //                                         if (type=="size") {
-        //                                                 return 'size: '+formatBytes(val,0)
-        //                                         } else if (type=="count") {
-        //                                                 return 'file count: '+formatCount(val,0)
-        //                                         } else if (type=="date") {
-        //                                                 return (new Date(val*1000))
-        //                                         }
-        //                                 return ""
-        //                         }
-        //                 }}
-        //         }
-        //
-        //         if (data.limited) {
-        //                 msg_warning("Partial result,  limited to "+data.limited+" entries by $MAX_ROWS (config.php). Please use filter !");
-        //         } else {
-        //                 msg_clean();
-        //         }
-        //
-        //         //Delete the old graph
-        //         if (GraphState!="empty") {
-        //                 myChart.destroy();
-        //         }
-        //
-        //         GraphCTX = document.getElementById("ctx").getContext("2d");
-        //
-        //
-        //         //Create the new graph
-        //         myChart = new Chart(GraphCTX,{
-        //                 type: data.default_graph,
-        //                 data: data,
-        //                 options: options
-        //         });
-        //
-        //         GraphState=data.default_graph;
-        //
-        //
-
-
         $.ajax({
                 url: "api/index.php?request=data/" + item + "/" +queryString
         }).then(function(data) {
@@ -223,27 +159,24 @@ function GetGraph(item){
           } else {
                   msg_clean();
           }
-
+          metadata=data.metadata;
 
           $('#myStateButton').button('reset');
                 if (TableState!="empty"){
                         TableState.destroy();
                         $('#datalist').empty();
                 }
-
                 TableState = $('#datalist').DataTable( {
-                        destroy: true,
-                           clear: true,
-                           data: data.datasets,
-                           columns: data.columns,
-                           columnDefs: data.columnsDefs
-                } );
-                reinitGraph(data.metadata);
+                      lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                      destroy: true,
+                         clear: true,
+                         data: data.datasets,
+                         columns: data.columns,
+                         columnDefs: data.columnsDefs
+               } );
 
-
+                reinitGraph(metadata);
         });
-
-
 }
 
 function reinitGraph(metadata)
@@ -357,6 +290,31 @@ function CleanForm() {
 
 
 $(document).ready(function() {
+  $.ajax({
+          url: "api/index.php?request=data/uid//uid//gid//filename/"
+  }).then(function(data) {
+    if (data.limited) {
+            msg_warning("Partial result,  limited to "+data.limited+" entries by $MAX_ROWS (config.php). Please use filter !");
+    } else {
+            msg_clean();
+    }
+    metadata=data.metadata;
+
+    TableState = $('#datalist').DataTable( {
+          lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          destroy: true,
+             clear: true,
+             data: data.datasets,
+             columns: data.columns,
+             columnDefs: data.columnsDefs
+   } );
+   reinitGraph(metadata);
+
+   TableState.on( 'draw.dt', function () {
+     reinitGraph(metadata);
+   } );
+
+  });
 
 
   $('#filterform input').on('keypress', function(event){
