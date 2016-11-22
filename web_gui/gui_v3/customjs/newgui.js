@@ -251,6 +251,9 @@ function reinitGraph(metadata)
         animation : false,
         showAllTooltips: false,
         defaultFontSize: 14,
+        legend: {
+          display: false,
+        },
         tooltips: {
           enabled: true,
           mode: 'single',
