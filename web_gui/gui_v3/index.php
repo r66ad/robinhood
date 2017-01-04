@@ -85,7 +85,8 @@ foreach ($fields as $field) {
         echo '<li><a href="#" onclick="GetGraph(\''.$field.'\')">'.l($field).'</a></li>';
 }
 
-echo '<li><a href="#"  onclick="GetGraph(\'Files\')">Files</a></li>';
+## Deactivate Button for Displaying Files. 
+#echo '<li><a href="#"  onclick="GetGraph(\'Files\')">Files</a></li>';
 ?>
 
           </ul>
